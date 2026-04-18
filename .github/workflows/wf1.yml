@@ -1,0 +1,36 @@
+name: wf1
+
+on:
+    push:
+        branches:
+            - master
+    workflow_dispatch:
+
+env:
+    DOTNET_VERSION: "10.0.x"
+
+jobs:
+    ci:
+        name: CI WF1
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v4  
+                with:
+                    dotnet-version: ${{ env.DOTNET_VERSION }}
+
+            - name: Restore dependencies
+              run: dotnet restore V1.sln
+
+            - name: Build
+              run: dotnet build --no-restore V1.sln --configuration Release
+
+            - name: Test
+              run: dotnet test --no-build --verbosity normal V1.sln
+
+            
+
