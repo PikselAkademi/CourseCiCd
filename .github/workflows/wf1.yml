@@ -42,7 +42,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                 name: ${{ env.PUBLISH_ROOT }}
-                path: "./artifact"
+                path: ${{ env.PUBLISH_ROOT }}
                 if-no-files-found: error
 
     cd:
