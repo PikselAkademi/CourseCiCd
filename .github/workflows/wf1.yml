@@ -8,6 +8,9 @@ on:
 
 env:
     DOTNET_VERSION: "10.0.x"
+    SOLUTION_ROOT: "V1.sln"
+    PROJECT_ROOT: "V1.Web/V1.Web.csproj"
+    PUBLISH_ROOT: "app-publish"
 
 jobs:
     ci:
@@ -27,10 +30,43 @@ jobs:
               run: dotnet restore V1.sln
 
             - name: Build
-              run: dotnet build --no-restore V1.sln --configuration Release 
+              run: dotnet build --no-restore ${{ env.SOLUTION_ROOT }} --configuration Release 
 
             - name: Test
-              run: dotnet test --no-build --verbosity normal V1.sln --configuration Release
+              run: dotnet test --no-build --verbosity normal ${{ env.SOLUTION_ROOT }} --configuration Release
+
+            - name: Publish
+              run: dotnet publish ${{ env.PROJECT_ROOT }} --no-build  --configuration Release --output ${{ env.PUBLISH_ROOT }}
+
+            - name: Upload artifact
+              uses: actions/upload-artifact@v3
+              with:
+                name: ${{ env.PUBLISH_ROOT }}
+                if-no-files-found: error
+
+    cd:
+        name: CD WF1
+        runs-on: ubuntu-latest
+        needs: ci
+
+        steps:
+            - name: Download artifact
+              uses: actions/download-artifact@v3
+              with:
+                name: ${{ env.PUBLISH_ROOT }}
+                path: "./artifact"
+
+            - name: Deploy FTP
+              uses: SamKirkland/FTP-Deploy-Action@4.0.0
+              with:
+                server: ${{ secrets.FTP_SERVER }}
+                username: ${{ secrets.FTP_USERNAME }}
+                password: ${{ secrets.FTP_PASSWORD }}
+                protocol: "ftp"
+                port: 21
+                local-dir: "./artifact"
+                server-dir: ${{ secrets.FTP_DIR }}
+                dangerous-clean-slate: false
 
             
 
